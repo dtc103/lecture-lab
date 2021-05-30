@@ -1,6 +1,6 @@
 # Lecture Lab
 
-Lecture lab as a chrome extension, which can be used by medical students to understand lecture videos better.
+Lecture lab is a chrome extension, which can be used by medical students to understand lecture videos better.
 This app is able to summarize videos, create flashcards according to the lectures content and to answer questions about them.
 
 # Installation
