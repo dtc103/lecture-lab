@@ -1,25 +1,35 @@
+"""
+pip imports:
+fastapi
+srt
+python_dotenv
+openai
+uvicorn main:app --reload
+"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pytube import YouTube, query
+from pytube import YouTube
 import srt
 from datetime import timedelta
 from dotenv import load_dotenv
 import os
 import openai
-import json
 import re
+import json
 
 def openai_login():
     load_dotenv()
     API_KEY = os.getenv('API_KEY')
 
-    openai.organization = "org-uwYoQCNCVA2dfSRkwFi4ReRy"
+    openai.organization = "org-0J10zZn9lypKaSBUA7vnDW6D"
     openai.api_key = API_KEY
 
 openai_login()
 
 #cache layout = {video_id: captions}
 cached_captions = {}
+
 app = FastAPI()
 
 origins = ["*"]
@@ -32,23 +42,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 #####################################################################
 
 @app.get("/")
 async def root():
-    print(cached_captions)
     return {"message": "msg"}
 
 @app.get("/summarize")
 async def summarize(video_id: str = ""):
     captions = get_caption_datastructure(video_id)
-    print(captions)
     if captions is None:
+        print("Captions are None")
+
         #redirect to error page or something
         return ""
 
+    print("Captions are not None")
+
+
     text = get_full_caption_text(captions)
+    print(text)
 
     #prevent too long caption text
     if len(text.split()) > 750:
@@ -75,11 +88,7 @@ async def flashcards(video_id: str = ""):
 
     flashcard_prompt = create_flashcard_prompt(text)
 
-    #print(flashcard_prompt)
-
     answer = query_gpt3(prompt=flashcard_prompt)
-
-    print(answer)
 
     fin_answer = parse_flashcard_answer(answer)
 
@@ -125,6 +134,7 @@ def add_en_to_cache(video_id: str):
 
     if 'a.en' in source.captions:
         auto_en_caption = source.captions['a.en']
+        print(auto_en_caption)
         if auto_en_caption is not None:
             cached_captions[video_id] = list(srt.parse(auto_en_caption.generate_srt_captions()))
             return True
@@ -133,7 +143,6 @@ def add_en_to_cache(video_id: str):
 
 def get_caption_datastructure(video_id: str):
     if in_cache(video_id):
-        print("is in cache")
         return cached_captions[video_id]
     else:
         if add_en_to_cache(video_id):
@@ -146,10 +155,11 @@ def get_full_caption_text(captions):
     full_text = ""
     for sub in captions:
         full_text += f"{sub.content} "  
-    return full_text 
+    return full_text
 
 def create_summarize_prompt(text):
-    prompt = "Generate a five sentence summary of the following transcript of a video to help understand its content.\n---\n"
+    prompt = "Generate a five sentence summary of the following transcript of a video to help understand its content.\n\n---"
+
     prompt += text
     prompt += "\n---\n"
     prompt += "Summary (five sentences):"
@@ -188,10 +198,9 @@ def parse_flashcard_answer(flashcard_answer):
 
     return json_string
 
-    
-
 def query_gpt3(engine="davinci-instruct-beta", prompt=None):
     completion = openai.Completion.create(engine=engine, prompt=prompt, max_tokens=250, temperature=0.35, top_p=1, frequency_penalty=0.1)
+    print(completion)
     return completion.choices[0].text
 
 def get_all_openai_engines():
