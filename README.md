@@ -9,3 +9,7 @@ This app is able to summarize videos, create flashcards according to the lecture
 - To be able to start the app u need the uvicorn server tools, which can be found on the following website: https://www.uvicorn.org
 - start the app by opening a console in your /backend/ folder and type in `uvicorn main:app`. This will start a server at your localhost.
 - Add the content from your /frontend/ folder into your chrome extension and you should be able to use the extension
+
+# Remarks
+- At the moment the app can only be used on youtube videos with available english subtitles
+- the anki export is still causing troubles
